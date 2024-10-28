@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  mysqldb:
+    image: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=dbDemo
+    ports:
+      - 3306:3306 
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  app:
+    build: ./backend
+    depends_on:
+      - mysqldb
+    links:
+      - mysqldb
+    ports:
+      - 3001:3001
+
+  front:
+    build: ./frontend
+    ports:
+      - 3000:80
+    

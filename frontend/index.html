@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap" rel="stylesheet">
+    <title>Demo</title>
+</head>
+<body>
+    <div class="row">
+        <div class="col-2"></div>
+        <div class="col-10"><h1>Demo</h1></div>
+    </div>
+    <div class="row">
+        <div class="col-2">
+            <div class="col"></div>
+        </div>
+        <div class="col-8">
+            <div class="col">
+                <form id="miFormulario" action="http://localhost:3001/enviar" method="POST">
+                    <label for="cedula">Cédula:</label> <br>
+                    <input type="number" id="cedula" name="cedula" required> <br>
+                    
+                    <label for="nombre">Nombre:</label> <br>
+                    <input type="text" id="nombre" name="nombre" required> <br>
+                    
+                    <label for="apellido">Apellido:</label> <br>
+                    <input type="text" id="apellido" name="apellido" required> <br>
+                    
+                    <label for="edad">Edad:</label> <br>
+                    <input type="number" id="edad" name="edad" required> <br>
+                    
+                    <button type="submit">Agregar Persona</button>
+                </form>
+                <table id="tablapersonas">
+                    <thead>
+                        <tr>
+                            <th>Cedula</th>
+                            <th>Nombre</th>
+                            <th>Apellido</th>
+                            <th>Edad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Los datos se llenarán aquí -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-2">
+            <div class="col"></div>
+        </div>
+    </div>
+    <script>
+        function cargarPersonas() {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', 'http://localhost:3001/personas', true); // Cambia 'puerto' por el puerto correcto del contenedor
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            const data = JSON.parse(xhr.responseText);
+            const tbody = document.querySelector('#tablapersonas tbody');
+            tbody.innerHTML = ''; // Limpiar el cuerpo de la tabla
+
+            data.forEach(persona => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${persona.cedula}</td>
+                    <td>${persona.nombre}</td>
+                    <td>${persona.apellido}</td>
+                    <td>${persona.edad}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        } else {
+            console.error('Error al cargar las personas:', xhr.statusText);
+        }
+    };
+    xhr.onerror = function() {
+        console.error('Error de conexión');
+    };
+    xhr.send();
+}
+
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarPersonas(); // Cargar las personas al iniciar la página
+
+            const form = document.getElementById('miFormulario');
+            form.addEventListener('submit', function(event) {
+                event.preventDefault(); // Evitar el envío por defecto del formulario
+
+                const formData = new FormData(form);
+                const data = {};
+                formData.forEach((value, key) => {
+                    data[key] = value;
+                });
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', form.action, true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        const responseData = JSON.parse(xhr.responseText);
+                        alert(responseData.mensaje); // Muestra el mensaje de la respuesta
+                        if (!responseData.mensaje.includes("Ya está en la base de datos")) {
+                            form.reset();
+                            cargarPersonas(); // Volver a cargar las personas después de agregar una
+                        }
+                        
+                    } else {
+                        console.error('Error al agregar la persona:', xhr.statusText);
+                    }
+                };
+                xhr.onerror = function() {
+                    console.error('Error de conexión');
+                };
+                xhr.send(JSON.stringify(data));
+            });
+        });
+    </script>
+</body>
+</html>
